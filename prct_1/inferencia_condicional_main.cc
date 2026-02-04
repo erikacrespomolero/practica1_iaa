@@ -4,43 +4,46 @@
  * Asignatura: Inteligencia Artificial Avanzada  
  * Curso: 3o
  * Autoras: Candela García Cruz y Érika Crespo Molero
- * Correo: alu0101639185@ull.edu.es
+ * Correos: alu0101655659@ull.edu.es y alu0101639185@ull.edu.es
+ * Fecha: 04/02/2026
+ * Main program.
+ * Allows generating or loading the distribution, intuitively 
+ * selecting variables of interest and conditioned variables, 
+ * and automatically computing the conditional distribution.
  */
 
+#include <fstream>
 #include "inferencia_condicional.h"
+#include "tools.h"
 
+/**
+ * Function that prints a message explaining the purpose of the program.
+ */
 void PrintProgramPurpose() {
-  std::cout << "Este programa tiene como entrada un fichero de entrada y otro de salida y realiza " << std::endl;
-  std::cout << "y resuelve el laberinto dinámico con A*." << std::endl << std::endl;
+  std::cout << "Este programa permite generar o cargar una distribución de probabilidades" << std::endl;
+std::cout << "y calcula automáticamente distribuciones condicionales basadas en las variables seleccionadas." << std::endl << std::endl;
 }
 
 int main(int argc, char* argv[]) {
-  try {
-    PrintProgramPurpose();
-    const std::string kHelptext = "Introduce un archivo de input y un archivo de output así: ./maze archivo_entrada archivo_salida";
-    Usage(argc, argv, 3, kHelptext);
+  PrintProgramPurpose();
+  const std::string kHelptext = "Introduce un archivo CSV con la distribución o ningún parámetro para generarla aleatoriamente";
+  Usage(argc, argv, 2, kHelptext);
+  
+  Inference inference;
+
+  if (argc > 1) {
     std::ifstream input_file(argv[1]);
     if (!input_file.is_open()) {
       throw std::runtime_error("Error: No se pudo abrir el archivo " + std::string(argv[1]));
     }
-    Maze maze_to_read;
-    input_file >> maze_to_read;
+    input_file >> inference;
+    std::cout << "Distribución cargada desde el archivo: " << argv[1] << std::endl;
     input_file.close();
-    std::ofstream output_file(argv[2]);
-    if (!output_file.is_open()) {
-      throw std::runtime_error("Error: No se pudo crear/abrir el archivo " + std::string(argv[2]));
-    }
-    output_file << "Mapa inicial del laberinto: " << '\n';
-    output_file << maze_to_read;
-    bool sol = false;
-    maze_to_read.ExecuteDynamicAStar(output_file);
-    output_file.close();
-  } catch (const std::exception& e) {
-    std::cerr << e.what() << std::endl;
-    return 1;
-  } catch (...) {
-    std::cerr << "Error desconocido ocurrido." << std::endl;
-    return 1;
-  }
+  } else {
+    inference = Inference();
+    std::cout << "Distribución generada aleatoriamente." << std::endl;
+  } 
+  
+  inference.askVariables();
   return 0;
 }
