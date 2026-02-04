@@ -32,11 +32,12 @@ class Inference {
   Inference();
   Inference(std::string file) {}
   int number_of_variables() { return number_of_variables_; }
-  int_fast32_t number_of_variables() const { return number_of_variables_; }
+  int number_of_variables() const { return number_of_variables_; }
   std::vector<double> probabilities() { return probabilities_; }
   std::vector<double> probabilities() const { return probabilities_; }
+  void setNumberOfVariables(int number_of_variables) { number_of_variables_ = number_of_variables; }
   void setProbabilities(std::vector<double> probabilities) { probabilities_ = probabilities; }
-  void askVariables();
+  void AskVariables();
  private:
   int number_of_variables_;
   std::vector<double> probabilities_; 
@@ -45,7 +46,7 @@ class Inference {
   std::vector<int> maskI_;
 };
 
-std::vector<double> RandomProbabilities(size_t number_of_variables, unsigned seed = std::random_device{}());
+std::vector<double> RandomProbabilities(int number_of_variables, unsigned seed = std::random_device{}());
 int BinaryToDecimal(const std::string &s);
 std::istream& operator>>(std::istream& in, Inference& inference_to_read);
 

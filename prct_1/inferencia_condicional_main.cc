@@ -28,22 +28,20 @@ int main(int argc, char* argv[]) {
   PrintProgramPurpose();
   const std::string kHelptext = "Introduce un archivo CSV con la distribución o ningún parámetro para generarla aleatoriamente";
   Usage(argc, argv, 2, kHelptext);
-  
-  Inference inference;
-
   if (argc > 1) {
     std::ifstream input_file(argv[1]);
     if (!input_file.is_open()) {
       throw std::runtime_error("Error: No se pudo abrir el archivo " + std::string(argv[1]));
     }
+    Inference inference(argv[1]);
     input_file >> inference;
     std::cout << "Distribución cargada desde el archivo: " << argv[1] << std::endl;
     input_file.close();
+    inference.AskVariables();
   } else {
-    inference = Inference();
+    Inference inference;
     std::cout << "Distribución generada aleatoriamente." << std::endl;
+    inference.AskVariables();
   } 
-  
-  inference.askVariables();
   return 0;
 }
