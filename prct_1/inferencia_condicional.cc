@@ -62,8 +62,9 @@ Inference::Inference() {
   int number_of_variables{0};
   std::cout << "Diga cuántas variables quiere: ";
   std::cin >> number_of_variables;
+  std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
   number_of_variables_ = number_of_variables;
-  probabilities_ = RandomProbabilities(number_of_variables);
+  probabilities_ = RandomProbabilities(pow(2, number_of_variables));
 }
 
 /**
@@ -91,7 +92,7 @@ std::istream& operator>>(std::istream& in, Inference& inference_to_read) {
   probabilities.resize(number_of_lines + 1);
   probabilities[BinaryToDecimal(mask)] = probability;
   while (number_of_lines > 0) {
-    if (!std::getline(in, line)) return in;
+    if (!std::getline(in, line)) break;
     pos = line.find(',');
     mask = line.substr(0, pos);
     probability_str = line.substr(pos + 1);
@@ -112,7 +113,6 @@ void Inference::AskVariables() {
   std::string input;
   // Condicional variables
   std::cout << "Introduzca las variables que quiere que sean condicionales (índices) cada una seguida de su valor y separadas por espacios, por ejemplo 2 0 3 1 6 0: ";
-  std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
   std::getline(std::cin, input);
   std::istringstream iss_condicionals(input);
   int index, value;
