@@ -35,6 +35,12 @@ class Inference {
   int number_of_variables() const { return number_of_variables_; }
   std::vector<double> probabilities() { return probabilities_; }
   std::vector<double> probabilities() const { return probabilities_; }
+  std::vector<int> maskC() { return maskC_; }
+  std::vector<int> maskC() const { return maskC_; }
+  std::vector<int> valC() { return valC_; }
+  std::vector<int> valC() const { return valC_; }
+  std::vector<int> maskI() { return maskI_; }
+  std::vector<int> maskI() const { return maskI_; }
   void setNumberOfVariables(int number_of_variables) { number_of_variables_ = number_of_variables; }
   void setProbabilities(std::vector<double> probabilities) { probabilities_ = probabilities; }
   void AskVariables();
