@@ -20,6 +20,7 @@
 #include <string>
 #include <cstdint>
 #include <random>
+#include <fstream>
 
 /** 
  * Class Inference.
@@ -30,30 +31,37 @@
 class Inference {
  public:
   Inference();
-  Inference(std::string file) {}
-  int number_of_variables() { return number_of_variables_; }
+  Inference(int num_variables);
   int number_of_variables() const { return number_of_variables_; }
-  std::vector<double> probabilities() { return probabilities_; }
   std::vector<double> probabilities() const { return probabilities_; }
-  std::vector<int> maskC() { return maskC_; }
   std::vector<int> maskC() const { return maskC_; }
-  std::vector<int> valC() { return valC_; }
   std::vector<int> valC() const { return valC_; }
-  std::vector<int> maskI() { return maskI_; }
   std::vector<int> maskI() const { return maskI_; }
+  std::vector<int> maskM() const { return maskM_; }
   void setNumberOfVariables(int number_of_variables) { number_of_variables_ = number_of_variables; }
   void setProbabilities(std::vector<double> probabilities) { probabilities_ = probabilities; }
   void AskVariables();
+  std::vector<double> prob_cond_bin();
+  void PrintJointDistribution(const std::string& filename = "") const;
+  void PrintConditionalDistribution(const std::vector<double>& conditional_distribution, 
+                                    const std::string& filename = "") const;
+  void InitializeMasks();
+  
  private:
   int number_of_variables_;
   std::vector<double> probabilities_; 
   std::vector<int> maskC_;
   std::vector<int> valC_;
   std::vector<int> maskI_;
+  std::vector<int> maskM_;
+  
+  // Métodos auxiliares para escritura en archivo
+  void PrintToFileOrConsole(std::ostream& os, const std::string& content) const;
 };
 
 std::vector<double> RandomProbabilities(int number_of_variables, unsigned seed = std::random_device{}());
 int BinaryToDecimal(const std::string &s);
 std::istream& operator>>(std::istream& in, Inference& inference_to_read);
+std::vector<int> DecimalToBinary(int decimal_number, int size_of_the_binary);
 
 #endif
