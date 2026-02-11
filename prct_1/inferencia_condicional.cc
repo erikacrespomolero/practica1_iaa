@@ -31,6 +31,9 @@ void Inference::PrintToFileOrConsole(std::ostream& os, const std::string& conten
 /**
  * @brief Function that randomly generates positive values and
  * normalizes them so that the sum of probabilities is 1.
+ * @param[in] number_of_variables Number of values to generate in the distribution.
+ * @param[in] seed Seed used to initialize the random number generator.
+ * @return A vector containing normalized random probabilities whose sum is 1.
  */
 std::vector<double> RandomProbabilities(int number_of_variables, unsigned seed) {
   std::mt19937 gen(seed);
@@ -47,6 +50,9 @@ std::vector<double> RandomProbabilities(int number_of_variables, unsigned seed) 
 
 /**
  * @brief Function that converts a binary string into its decimal representation.
+ * This is how the index of the variable is obtained.
+ * @param[in] s String containing a binary number.
+ * @return Integer value corresponding to the binary input string in decimal.
  */
 int BinaryToDecimal(const std::string &s) {
   int value = 0;
@@ -57,14 +63,16 @@ int BinaryToDecimal(const std::string &s) {
 }
 
 /**
- * @brief Empty constructor.
+ * @brief Default constructor that initializes the inference object
+ * with zero variables.
  */
 Inference::Inference() : number_of_variables_(0) {
-  // Empty constructor for loading from file
 }
 
 /**
- * @brief Constructor to generate random distribution.
+ * @brief Constructor that initializes the inference object with the number of 
+ * variables introduced by the user and calling the function that generates
+ * a random probability distribution.
  */
 Inference::Inference(int num_variables) : number_of_variables_(num_variables) {
   int num_configurations = static_cast<int>(std::pow(2, num_variables));
@@ -73,7 +81,9 @@ Inference::Inference(int num_variables) : number_of_variables_(num_variables) {
 }
 
 /**
- * @brief Initializes masks with correct size.
+ * @brief Method that initializes the masks and value vectors for the inference
+ * process. All masks are resized according to the number of variables and
+ * initialized to zero.
  */
 void Inference::InitializeMasks() {
   maskC_.resize(number_of_variables_, 0);
@@ -84,6 +94,14 @@ void Inference::InitializeMasks() {
 
 /**
  * @brief Input stream operator overloading (>>).
+ * Reads a probability distribution from the input stream, where each line
+ * contains a binary mask and its associated probability separated by ','.
+ * The binary mask is converted to decimal and used as an index to store
+ * the probability in the probabilities vector.
+ * @param[in] in Reference to std::istream.
+ * @param[in] inference_to_read Reference to an Inference object where the
+ * probabilities read from the stream are stored.
+ * @return in The input stream after reading the probability distribution.
  */
 std::istream& operator>>(std::istream& in, Inference& inference_to_read) {
   std::string line;
@@ -109,74 +127,41 @@ std::istream& operator>>(std::istream& in, Inference& inference_to_read) {
   return in;
 }
 
+
 /**
  * @brief Prompts the user to select conditional and interest variables.
+ * The user is asked to input the indices and values of the conditional variables,
+ * followed by the indices of the variables of interest. The masks and values are
+ * stored internally in the inference object.
  */
 void Inference::AskVariables() {
   std::cout << "\n=== SELECCIÓN DE VARIABLES ===" << std::endl;
-  
-  // Reset masks
-  std::fill(maskC_.begin(), maskC_.end(), 0);
-  std::fill(valC_.begin(), valC_.end(), 0);
-  std::fill(maskI_.begin(), maskI_.end(), 0);
-  std::fill(maskM_.begin(), maskM_.end(), 0);
-  
-  // Conditional variables
   std::cout << "\nVARIABLES CONDICIONADAS (X_C = valores)" << std::endl;
   std::cout << "Ingrese pares 'índice valor' separados por espacios." << std::endl;
   std::cout << "Ejemplo: '2 1 3 0' significa X2=1 y X3=0" << std::endl;
-  std::cout << "Presione Enter sin valores si no hay condiciones." << std::endl;
   std::cout << ">> ";
-  
   std::string input;
   std::getline(std::cin, input);
-  
   if (!input.empty()) {
     std::istringstream iss(input);
-    int index, value;
-    
+    int index, value;   
     while (iss >> index >> value) {
-      if (index >= 1 && index <= number_of_variables_) {
-        maskC_[index - 1] = 1;
-        valC_[index - 1] = value;
-      } else {
-        std::cout << "Advertencia: Índice " << index << " fuera de rango (1-" 
-                  << number_of_variables_ << ")" << std::endl;
-      }
+      maskC_[index - 1] = 1;
+      valC_[index - 1] = value;
     }
   }
-  
-  // Interest variables
   std::cout << "\nVARIABLES DE INTERÉS (X_I)" << std::endl;
   std::cout << "Ingrese los índices de las variables separados por espacios." << std::endl;
   std::cout << "Ejemplo: '1 3 4' para X1, X3, X4" << std::endl;
-  std::cout << "Presione Enter sin valores para usar todas las no condicionadas." << std::endl;
-  std::cout << ">> ";
-  
+  std::cout << ">> "; 
   std::getline(std::cin, input);
-  
   if (!input.empty()) {
     std::istringstream iss(input);
-    int index;
-    
+    int index;   
     while (iss >> index) {
-      if (index >= 1 && index <= number_of_variables_) {
-        maskI_[index - 1] = 1;
-      } else {
-        std::cout << "Advertencia: Índice " << index << " fuera de rango (1-" 
-                  << number_of_variables_ << ")" << std::endl;
-      }
+      maskI_[index - 1] = 1;
     }
-  } else {
-    // Default: all non-conditioned variables are of interest
-    for (int i = 0; i < number_of_variables_; ++i) {
-      if (maskC_[i] == 0) {
-        maskI_[i] = 1;
-      }
-    }
-  }
-  
-  // Calculate marginalization mask
+  } 
   for (int i = 0; i < number_of_variables_; ++i) {
     if (maskI_[i] == 0 && maskC_[i] == 0) {
       maskM_[i] = 1;
@@ -185,20 +170,27 @@ void Inference::AskVariables() {
 }
 
 /**
- * @brief Converts decimal to binary vector.
+ * Function that converts a decimal number into its binary representation.
+ * This is used to obtain the values of the variables for a given index.
+ * @param[in] decimal_number Integer value to be converted to binary.
+ * @param[in] size_of_the_binary Number of bits (variables) in the result.
+ * @return A vector containing the binary representation of the input number.
  */
 std::vector<int> DecimalToBinary(int decimal_number, int size_of_the_binary) {
   std::vector<int> values(size_of_the_binary, 0);
   int temp = decimal_number;
   for (int i = 0; i < size_of_the_binary; ++i) {
-    values[i] = temp % 2;
+    values[size_of_the_binary - 1 - i] = temp % 2;
     temp = temp / 2;
   }
   return values;
 }
 
 /**
- * @brief Calculates conditional distribution.
+ * Calculates the conditional probability distribution based on the
+ * selected conditioned and interest variables.
+ * @return A vector containing the normalized conditional probabilities
+ * for all combinations of the interest variables.
  */
 std::vector<double> Inference::prob_cond_bin() {
   int num_interest_vars = std::count(maskI_.begin(), maskI_.end(), 1);
@@ -230,22 +222,27 @@ std::vector<double> Inference::prob_cond_bin() {
   return conditional_distribution;
 }
 
+/**
+ * @brief Translates to a decimal index the pattern (binary) for the interest variable of a row
+ * @param values Values of interest variables in a row
+ * @return Decimal index
+ */
 int Inference::CalculatePatternIndex(const std::vector<int>& values) const {
   std::string binary_string = "";
-  // From XN to X1 (most to least significant)
-  for (int variable = number_of_variables_ - 1; variable >= 0; --variable) {
-      if (maskI_[variable] == 1) {
-          binary_string += (values[variable] == 1) ? '1' : '0';
-      }
+  for (int variable = 0; variable < number_of_variables_; ++variable) {
+    if (maskI_[variable] == 1) {
+      binary_string += (values[variable] == 1) ? '1' : '0';
+    }
   }
   if (binary_string.empty()) {
-      return 0;
+    return 0;
   }
   return BinaryToDecimal(binary_string);
 }
 
+
 /**
- * @brief Prints joint distribution to file or console.
+ * @brief Prints the joint distribution generated to file or console.
  * @param filename If empty, prints to console; otherwise prints to file.
  */
 void Inference::PrintJointDistribution(const std::string& filename) const {
@@ -269,24 +266,21 @@ void Inference::PrintJointDistribution(const std::string& filename) const {
   os << "Número de configuraciones: " << probabilities_.size() << std::endl;
   os << std::string(60, '-') << std::endl;
   
-  // For large distributions, show summary instead of full table
-  if (probabilities_.size() > 1024) {  // More than 10 variables
+  if (probabilities_.size() > 1024) {
     os << "Distribución demasiado grande para mostrar completa (" 
        << probabilities_.size() << " configuraciones)." << std::endl;
     os << "Mostrando solo las primeras y últimas 5 configuraciones:" << std::endl << std::endl;
     
-    // Show header
-    for (int i = number_of_variables_; i >= 1; --i) {
+    for (int i = 1; i <= number_of_variables_; ++i) {
       os << "X" << i << " ";
     }
     os << "| Probabilidad" << std::endl;
     os << std::string(60, '-') << std::endl;
     
-    // First 5 configurations
     for (size_t config = 0; config < 5 && config < probabilities_.size(); ++config) {
       std::vector<int> values = DecimalToBinary(config, number_of_variables_);
       
-      for (int i = number_of_variables_ - 1; i >= 0; --i) {
+      for (int i = 0; i < number_of_variables_; ++i) {
         os << values[i] << "  ";
       }
       
@@ -295,19 +289,17 @@ void Inference::PrintJointDistribution(const std::string& filename) const {
     
     os << "... (" << (probabilities_.size() - 10) << " configuraciones omitidas) ..." << std::endl;
     
-    // Last 5 configurations
     for (size_t config = probabilities_.size() - 5; config < probabilities_.size(); ++config) {
       std::vector<int> values = DecimalToBinary(config, number_of_variables_);
       
-      for (int i = number_of_variables_ - 1; i >= 0; --i) {
+      for (int i = 0; i < number_of_variables_; ++i) {
         os << values[i] << "  ";
       }
       
       os << "| " << std::fixed << std::setprecision(6) << probabilities_[config] << std::endl;
     }
   } else {
-    // Show full table for small distributions
-    for (int i = number_of_variables_; i >= 1; --i) {
+    for (int i = 1; i <= number_of_variables_; ++i) {
       os << "X" << i << " ";
     }
     os << "| Probabilidad" << std::endl;
@@ -317,7 +309,7 @@ void Inference::PrintJointDistribution(const std::string& filename) const {
     for (size_t config = 0; config < probabilities_.size(); ++config) {
       std::vector<int> values = DecimalToBinary(config, number_of_variables_);
       
-      for (int i = number_of_variables_ - 1; i >= 0; --i) {
+      for (int i = 0; i < number_of_variables_; ++i) {
         os << values[i] << "  ";
       }
       
@@ -336,7 +328,12 @@ void Inference::PrintJointDistribution(const std::string& filename) const {
 }
 
 /**
- * @brief Prints conditional distribution to file or console.
+ * Prints the conditional probability distribution either to the console
+ * or to a file. 
+ * @param[in] conditional_distribution Vector containing the normalized
+ * conditional probabilities.
+ * @param[in] filename Name of the output file. If empty, the distribution
+ * is printed to the console; otherwise, it is appended to the file.
  */
 void Inference::PrintConditionalDistribution(const std::vector<double>& conditional_distribution,
                                            const std::string& filename) const {
@@ -344,13 +341,13 @@ void Inference::PrintConditionalDistribution(const std::vector<double>& conditio
   std::ofstream file_stream;
   
   if (!filename.empty()) {
-    file_stream.open(filename, std::ios::app);  // Append mode
+    file_stream.open(filename, std::ios::app);
     if (!file_stream.is_open()) {
       std::cerr << "Error: No se pudo abrir el archivo " << filename << " para escritura." << std::endl;
       return;
     }
     output_stream = &file_stream;
-    if (file_stream.tellp() == 0) {  // If file is empty
+    if (file_stream.tellp() == 0) {
       std::cout << "✓ Escribiendo distribución condicional en archivo: " << filename << std::endl;
     } else {
       std::cout << "✓ Añadiendo distribución condicional al archivo: " << filename << std::endl;
@@ -359,7 +356,6 @@ void Inference::PrintConditionalDistribution(const std::vector<double>& conditio
   
   std::ostream& os = *output_stream;
   
-  // Get list of conditioned variables
   std::vector<std::pair<int, int>> conditioned_vars;
   for (int i = 0; i < number_of_variables_; ++i) {
     if (maskC_[i] == 1) {
@@ -367,7 +363,6 @@ void Inference::PrintConditionalDistribution(const std::vector<double>& conditio
     }
   }
   
-  // Get list of interest variables
   std::vector<int> interest_vars;
   for (int i = 0; i < number_of_variables_; ++i) {
     if (maskI_[i] == 1) {
@@ -377,7 +372,6 @@ void Inference::PrintConditionalDistribution(const std::vector<double>& conditio
   
   os << "\n=== DISTRIBUCIÓN CONDICIONAL ===" << std::endl;
   
-  // Show variable information
   os << "Variables condicionadas (X_C): ";
   if (conditioned_vars.empty()) {
     os << "ninguna";
@@ -407,37 +401,31 @@ void Inference::PrintConditionalDistribution(const std::vector<double>& conditio
   os << "\nProbabilidades condicionales P(X_I | X_C):" << std::endl;
   os << std::string(60, '-') << std::endl;
   
-  // Show table header
   for (int var : interest_vars) {
     os << "X" << var << "\t";
   }
   os << "| Probabilidad" << std::endl;
   os << std::string(60, '-') << std::endl;
   
-  // Show all combinations of interest variables
   for (size_t comb = 0; comb < conditional_distribution.size(); ++comb) {
-    // Convert combination index to binary values
     std::vector<int> comb_values(interest_vars.size(), 0);
     int temp = comb;
     
-    for (size_t j = 0; j < interest_vars.size(); ++j) {
+    for (int j = interest_vars.size() - 1; j >= 0; --j) {
       comb_values[j] = temp % 2;
       temp = temp / 2;
     }
     
-    // Show interest variable values
     for (int val : comb_values) {
       os << val << "\t";
     }
     
-    // Show conditional probability
     os << "| " << std::fixed << std::setprecision(6) 
        << conditional_distribution[comb] << std::endl;
   }
   
   os << std::string(60, '-') << std::endl;
   
-  // Verify sum is 1
   double sum = 0.0;
   for (double prob : conditional_distribution) {
     sum += prob;
