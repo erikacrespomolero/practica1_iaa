@@ -139,6 +139,7 @@ void Inference::AskVariables() {
   std::cout << "\nVARIABLES CONDICIONADAS (X_C = valores)" << std::endl;
   std::cout << "Ingrese pares 'índice valor' separados por espacios." << std::endl;
   std::cout << "Ejemplo: '2 1 3 0' significa X2=1 y X3=0" << std::endl;
+  std::cout << "Pulse enter si no quiere ninguna variable condicional" << std::endl;
   std::cout << ">> ";
   std::string input;
   std::getline(std::cin, input);

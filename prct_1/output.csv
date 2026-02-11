@@ -11,3 +11,4 @@ num_variables,num_cond_vars,num_interest_vars,conditional_dist_size,execution_ti
 10,1,8,256,1800
 25,9,10,1024,17847319
 
+3,0,1,2,43
