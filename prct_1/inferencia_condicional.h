@@ -54,6 +54,7 @@ class Inference {
   std::vector<int> valC_;
   std::vector<int> maskI_;
   std::vector<int> maskM_;
+  int CalculatePatternIndex(const std::vector<int>& values) const;
   
   // Métodos auxiliares para escritura en archivo
   void PrintToFileOrConsole(std::ostream& os, const std::string& content) const;

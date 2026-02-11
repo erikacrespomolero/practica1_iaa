@@ -88,64 +88,24 @@ void Inference::InitializeMasks() {
 std::istream& operator>>(std::istream& in, Inference& inference_to_read) {
   std::string line;
   std::vector<std::pair<std::string, double>> entries;
-  
   while (std::getline(in, line)) {
     if (line.empty()) continue;
-    
     auto pos = line.find(',');
-    if (pos == std::string::npos) {
-      throw std::runtime_error("Formato incorrecto en línea: " + line);
-    }
-    
     std::string mask = line.substr(0, pos);
     std::string prob_str = line.substr(pos + 1);
-    
-    // Remove spaces
-    mask.erase(std::remove_if(mask.begin(), mask.end(), ::isspace), mask.end());
-    prob_str.erase(std::remove_if(prob_str.begin(), prob_str.end(), ::isspace), prob_str.end());
-    
     double probability = std::stod(prob_str);
     entries.push_back({mask, probability});
   }
-  
-  if (entries.empty()) {
-    throw std::runtime_error("Archivo vacío o sin datos válidos");
-  }
-  
   int num_vars = entries[0].first.length();
   inference_to_read.setNumberOfVariables(num_vars);
-  
   int num_configurations = static_cast<int>(std::pow(2, num_vars));
   std::vector<double> probabilities(num_configurations, 0.0);
-  
   for (const auto& entry : entries) {
-    if (entry.first.length() != num_vars) {
-      throw std::runtime_error("Todas las máscaras deben tener la misma longitud");
-    }
-    
     int index = BinaryToDecimal(entry.first);
-    if (index < 0 || index >= num_configurations) {
-      throw std::runtime_error("Índice fuera de rango para máscara: " + entry.first);
-    }
-    
     probabilities[index] = entry.second;
   }
-  
-  // Verify sum is approximately 1
-  double sum = 0.0;
-  for (double prob : probabilities) sum += prob;
-  
-  if (std::abs(sum - 1.0) > 1e-6) {
-    std::cout << "Advertencia: La suma de probabilidades es " << sum 
-              << ", se normalizará a 1." << std::endl;
-    for (double& prob : probabilities) {
-      prob /= sum;
-    }
-  }
-  
   inference_to_read.setProbabilities(probabilities);
   inference_to_read.InitializeMasks();
-  
   return in;
 }
 
@@ -245,11 +205,9 @@ std::vector<double> Inference::prob_cond_bin() {
   int num_combinations = static_cast<int>(std::pow(2, num_interest_vars));
   std::vector<double> conditional_distribution(num_combinations, 0.0);
   double denominator = 0.0;  
-  
-  for (int index_column = 0; index_column < probabilities_.size(); ++index_column) { 
+  for (int index_row = 0; index_row < probabilities_.size(); ++index_row) { 
     bool satisfies_conditions = true;
-    std::vector<int> values_of_variables_row = DecimalToBinary(index_column, number_of_variables());
-    
+    std::vector<int> values_of_variables_row = DecimalToBinary(index_row, number_of_variables());
     for (int i = 0; i < number_of_variables_; ++i) {
       if (maskC_[i] == 1) {
         if (values_of_variables_row[i] != valC_[i]) {
@@ -258,26 +216,32 @@ std::vector<double> Inference::prob_cond_bin() {
         }
       }
     }
-    
     if (satisfies_conditions) {
-      int pattern_index = 0;
-      for (int variable = 0; variable < number_of_variables_; ++variable) {
-        if (maskI_[variable] == 1) {
-          pattern_index = pattern_index * 2 + values_of_variables_row[variable];
-        }
-      }
-      conditional_distribution[pattern_index] += probabilities_[index_column];
-      denominator += probabilities_[index_column];
+      int pattern_index = CalculatePatternIndex(values_of_variables_row);
+      conditional_distribution[pattern_index] += probabilities_[index_row];
+      denominator += probabilities_[index_row];
     }
   }
-  
   if (denominator > 0) {
     for (int i = 0; i < num_combinations; ++i) {
       conditional_distribution[i] /= denominator;
     }
   }
-  
   return conditional_distribution;
+}
+
+int Inference::CalculatePatternIndex(const std::vector<int>& values) const {
+  std::string binary_string = "";
+  // From XN to X1 (most to least significant)
+  for (int variable = number_of_variables_ - 1; variable >= 0; --variable) {
+      if (maskI_[variable] == 1) {
+          binary_string += (values[variable] == 1) ? '1' : '0';
+      }
+  }
+  if (binary_string.empty()) {
+      return 0;
+  }
+  return BinaryToDecimal(binary_string);
 }
 
 /**
