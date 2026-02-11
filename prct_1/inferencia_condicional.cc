@@ -135,7 +135,7 @@ std::istream& operator>>(std::istream& in, Inference& inference_to_read) {
  * stored internally in the inference object.
  */
 void Inference::AskVariables() {
-  std::cout << "\n=== SELECCIÓN DE VARIABLES ===" << std::endl;
+  std::cout << "\n SELECCIÓN DE VARIABLES " << std::endl;
   std::cout << "\nVARIABLES CONDICIONADAS (X_C = valores)" << std::endl;
   std::cout << "Ingrese pares 'índice valor' separados por espacios." << std::endl;
   std::cout << "Ejemplo: '2 1 3 0' significa X2=1 y X3=0" << std::endl;
@@ -247,8 +247,7 @@ int Inference::CalculatePatternIndex(const std::vector<int>& values) const {
  */
 void Inference::PrintJointDistribution(const std::string& filename) const {
   std::ostream* output_stream = &std::cout;
-  std::ofstream file_stream;
-  
+  std::ofstream file_stream; 
   if (!filename.empty()) {
     file_stream.open(filename);
     if (!file_stream.is_open()) {
@@ -256,46 +255,35 @@ void Inference::PrintJointDistribution(const std::string& filename) const {
       return;
     }
     output_stream = &file_stream;
-    std::cout << "✓ Escribiendo distribución conjunta en archivo: " << filename << std::endl;
+    std::cout << "Escribiendo distribución conjunta en archivo: " << filename << std::endl;
   }
-  
   std::ostream& os = *output_stream;
-  
-  os << "=== DISTRIBUCIÓN CONJUNTA ===" << std::endl;
+  os << "DISTRIBUCIÓN CONJUNTA" << std::endl;
   os << "Número de variables: " << number_of_variables_ << std::endl;
   os << "Número de configuraciones: " << probabilities_.size() << std::endl;
   os << std::string(60, '-') << std::endl;
-  
   if (probabilities_.size() > 1024) {
     os << "Distribución demasiado grande para mostrar completa (" 
        << probabilities_.size() << " configuraciones)." << std::endl;
     os << "Mostrando solo las primeras y últimas 5 configuraciones:" << std::endl << std::endl;
-    
     for (int i = 1; i <= number_of_variables_; ++i) {
       os << "X" << i << " ";
     }
     os << "| Probabilidad" << std::endl;
-    os << std::string(60, '-') << std::endl;
-    
+    os << std::string(60, '-') << std::endl;   
     for (size_t config = 0; config < 5 && config < probabilities_.size(); ++config) {
-      std::vector<int> values = DecimalToBinary(config, number_of_variables_);
-      
+      std::vector<int> values = DecimalToBinary(config, number_of_variables_);     
       for (int i = 0; i < number_of_variables_; ++i) {
         os << values[i] << "  ";
-      }
-      
+      }     
       os << "| " << std::fixed << std::setprecision(6) << probabilities_[config] << std::endl;
-    }
-    
-    os << "... (" << (probabilities_.size() - 10) << " configuraciones omitidas) ..." << std::endl;
-    
+    }   
+    os << "... (" << (probabilities_.size() - 10) << " configuraciones omitidas) ..." << std::endl;   
     for (size_t config = probabilities_.size() - 5; config < probabilities_.size(); ++config) {
-      std::vector<int> values = DecimalToBinary(config, number_of_variables_);
-      
+      std::vector<int> values = DecimalToBinary(config, number_of_variables_);     
       for (int i = 0; i < number_of_variables_; ++i) {
         os << values[i] << "  ";
-      }
-      
+      }     
       os << "| " << std::fixed << std::setprecision(6) << probabilities_[config] << std::endl;
     }
   } else {
@@ -303,25 +291,20 @@ void Inference::PrintJointDistribution(const std::string& filename) const {
       os << "X" << i << " ";
     }
     os << "| Probabilidad" << std::endl;
-    os << std::string(60, '-') << std::endl;
-    
+    os << std::string(60, '-') << std::endl;    
     double total_sum = 0.0;
     for (size_t config = 0; config < probabilities_.size(); ++config) {
-      std::vector<int> values = DecimalToBinary(config, number_of_variables_);
-      
+      std::vector<int> values = DecimalToBinary(config, number_of_variables_);     
       for (int i = 0; i < number_of_variables_; ++i) {
         os << values[i] << "  ";
-      }
-      
+      }     
       os << "| " << std::fixed << std::setprecision(6) << probabilities_[config] << std::endl;
       total_sum += probabilities_[config];
-    }
-    
+    }   
     os << std::string(60, '-') << std::endl;
     os << "Suma total de probabilidades: " << std::fixed << std::setprecision(6) 
        << total_sum << std::endl;
   }
-  
   if (!filename.empty()) {
     file_stream.close();
   }
@@ -338,8 +321,7 @@ void Inference::PrintJointDistribution(const std::string& filename) const {
 void Inference::PrintConditionalDistribution(const std::vector<double>& conditional_distribution,
                                            const std::string& filename) const {
   std::ostream* output_stream = &std::cout;
-  std::ofstream file_stream;
-  
+  std::ofstream file_stream;  
   if (!filename.empty()) {
     file_stream.open(filename, std::ios::app);
     if (!file_stream.is_open()) {
@@ -348,30 +330,25 @@ void Inference::PrintConditionalDistribution(const std::vector<double>& conditio
     }
     output_stream = &file_stream;
     if (file_stream.tellp() == 0) {
-      std::cout << "✓ Escribiendo distribución condicional en archivo: " << filename << std::endl;
+      std::cout << "Escribiendo distribución condicional en archivo: " << filename << std::endl;
     } else {
-      std::cout << "✓ Añadiendo distribución condicional al archivo: " << filename << std::endl;
+      std::cout << "Añadiendo distribución condicional al archivo: " << filename << std::endl;
     }
-  }
-  
-  std::ostream& os = *output_stream;
-  
+  } 
+  std::ostream& os = *output_stream; 
   std::vector<std::pair<int, int>> conditioned_vars;
   for (int i = 0; i < number_of_variables_; ++i) {
     if (maskC_[i] == 1) {
       conditioned_vars.push_back({i + 1, valC_[i]});
     }
-  }
-  
+  }  
   std::vector<int> interest_vars;
   for (int i = 0; i < number_of_variables_; ++i) {
     if (maskI_[i] == 1) {
       interest_vars.push_back(i + 1);
     }
-  }
-  
-  os << "\n=== DISTRIBUCIÓN CONDICIONAL ===" << std::endl;
-  
+  }  
+  os << "\n DISTRIBUCIÓN CONDICIONAL " << std::endl;  
   os << "Variables condicionadas (X_C): ";
   if (conditioned_vars.empty()) {
     os << "ninguna";
@@ -383,8 +360,7 @@ void Inference::PrintConditionalDistribution(const std::vector<double>& conditio
       }
     }
   }
-  os << std::endl;
-  
+  os << std::endl; 
   os << "Variables de interés (X_I): ";
   if (interest_vars.empty()) {
     os << "ninguna";
@@ -397,41 +373,31 @@ void Inference::PrintConditionalDistribution(const std::vector<double>& conditio
     }
   }
   os << std::endl;
-  
   os << "\nProbabilidades condicionales P(X_I | X_C):" << std::endl;
   os << std::string(60, '-') << std::endl;
-  
   for (int var : interest_vars) {
     os << "X" << var << "\t";
   }
   os << "| Probabilidad" << std::endl;
-  os << std::string(60, '-') << std::endl;
-  
+  os << std::string(60, '-') << std::endl; 
   for (size_t comb = 0; comb < conditional_distribution.size(); ++comb) {
     std::vector<int> comb_values(interest_vars.size(), 0);
-    int temp = comb;
-    
+    int temp = comb;    
     for (int j = interest_vars.size() - 1; j >= 0; --j) {
       comb_values[j] = temp % 2;
       temp = temp / 2;
-    }
-    
+    }    
     for (int val : comb_values) {
       os << val << "\t";
-    }
-    
-    os << "| " << std::fixed << std::setprecision(6) 
-       << conditional_distribution[comb] << std::endl;
-  }
-  
+    }   
+    os << "| " << std::fixed << std::setprecision(6) << conditional_distribution[comb] << std::endl;
+  } 
   os << std::string(60, '-') << std::endl;
-  
   double sum = 0.0;
   for (double prob : conditional_distribution) {
     sum += prob;
   }
   os << "Suma total: " << std::fixed << std::setprecision(6) << sum << std::endl;
-  
   if (!filename.empty()) {
     file_stream.close();
   }

@@ -24,10 +24,8 @@
  * Function that prints a message explaining the purpose of the program.
  */
 void PrintProgramPurpose() {
-  std::cout << "==========================================================" << std::endl;
   std::cout << "    INFERENCIA CONDICIONAL EN DISTRIBUCIONES DISCRETAS    " << std::endl;
   std::cout << "              VARIABLES BINARIAS                          " << std::endl;
-  std::cout << "==========================================================" << std::endl;
   std::cout << std::endl;
   std::cout << "Este programa permite:" << std::endl;
   std::cout << "1. Generar o cargar una distribución de probabilidad conjunta" << std::endl;
@@ -134,7 +132,7 @@ int main(int argc, char* argv[]) {
                     execution_time_us,
                     conditional_dist.size());
   // Show execution time summary
-  std::cout << "\n=== RESUMEN DE TIEMPOS ===" << std::endl;
+  std::cout << "\n RESUMEN DE TIEMPOS " << std::endl;
   std::cout << "Número total de variables (N): " << inference.number_of_variables() << std::endl;
   std::cout << "Configuraciones totales: 2^" << inference.number_of_variables() 
             << " = " << total_configs << std::endl;
